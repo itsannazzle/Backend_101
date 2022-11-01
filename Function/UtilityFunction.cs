@@ -7,17 +7,16 @@ namespace backend_101.Function
 {
     public static class UtilityFunction
     {
-        public static ResponseModel callInternalService(string stringURL, RequestModel modelRequest)
+        public static ResponseModel callInternalService(string stringURL, String stringRequest)
         {
             ResponseModel modelResponse = new ResponseModel();
+            string stringEncodedRequest;
+            HttpClient client = new HttpClient();
+            Uri uri = new Uri(stringURL);
 
             try
             {
-                HttpClient client = new HttpClient();
-
-                Uri uri = new Uri(stringURL);
-
-                using StringContent content = new StringContent(JsonSerializer.Serialize(modelRequest),UnicodeEncoding.UTF8,"application/json");
+                using StringContent content = new StringContent(JsonSerializer.Serialize(stringRequest),UnicodeEncoding.UTF8,"application/json");
 
                 HttpResponseMessage httpResponseMessage = client.PostAsync(uri, content).Result;
 

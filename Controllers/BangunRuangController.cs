@@ -13,38 +13,58 @@ public class BangunRuangController : BaseController
     [HttpPost]
     [Route("[controller]/calculatePersegi")]
 
-    public ResponseModel calculatePersegi([FromBody] RequestModel modelRequest)
+    public String calculatePersegi([FromBody] String stringRequest)
     {
         PersegiModel modelPersegi = new PersegiModel();
         UserModel modelUser = new UserModel();
         ResponseModel modelResponse = new ResponseModel();
+        RequestModel modelRequest = new RequestModel();
+        String stringRequestDecoded = "";
+        bool boolException = false;
 
         string stringToken = Request.Headers["Token"];
 
-        if(stringToken != null)
+        try
         {
+            stringRequestDecoded = base64Decode(stringRequest);
+        }
+        catch (Exception exception)
+        {
+            modelResponse.MessageContent = exception.Message;
+            modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_FAIL;
+            modelRequest.Data = exception.Message;
+            modelResponse.Data = exception.Message;
+            boolException = true;
+        }
 
+        if(!boolException)
+        {
+            JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            };
+
+            if(stringToken != null)
+            {
             RequestModel modelRequestInternal = new RequestModel();
             modelUser.Token = stringToken;
 
-            string stringData = base64Decode(modelRequest.Data);
-
-            if(!(string.IsNullOrEmpty(stringData)))
+            if(!(string.IsNullOrEmpty(stringRequestDecoded)))
             {
-                string stringModelRequestDataSerialize = JsonSerializer.Serialize<UserModel>(modelUser);
-                modelRequestInternal.Data = base64Encode(stringModelRequestDataSerialize);
+                modelRequest = JsonSerializer.Deserialize<RequestModel>(stringRequestDecoded,serializerOptions);
 
-                modelResponse = UtilityFunction.callInternalService(WebAddressConstant.STRING_SCHME_HTTP + WebAddressConstant.STRING_SCHME_LOCALHOST + WebAddressConstant.STRING_PORT_KIDZ +  WebAddressConstant.STRING_KIDZ_VALIDATEUSERTOKEN,modelRequestInternal);
+                string stringModelRequestDataSerialize = JsonSerializer.Serialize<RequestModel>(modelRequest);
+                string stringRequestToken = base64Encode(stringModelRequestDataSerialize);
+
+                modelResponse = UtilityFunction.callInternalService(WebAddressConstant.STRING_SCHME_HTTP + WebAddressConstant.STRING_SCHME_LOCALHOST + WebAddressConstant.STRING_PORT_KIDZ +  WebAddressConstant.STRING_KIDZ_VALIDATEUSERTOKEN,stringRequestToken);
 
                 if (modelResponse.ServiceResponseCode == ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_SUCCESS)
                 {
-                    JsonSerializerOptions serializerOptions = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                    };
 
                     modelUser = JsonSerializer.Deserialize<UserModel>(modelResponse.Data, serializerOptions);
-                    modelPersegi = JsonSerializer.Deserialize<PersegiModel>(stringData, serializerOptions);;
+                    UserModel modelUserResponse = new UserModel();
+                    modelUserResponse = JsonSerializer.Deserialize<UserModel>(modelRequest.Data, serializerOptions);
+                    modelPersegi = modelUserResponse.modelPersegi;
                     modelPersegi.Result = modelPersegi.countLuasBangunan();
                     modelUser.modelPersegi = modelPersegi;
                     Console.Write(modelPersegi.detailBangunan());
@@ -52,7 +72,7 @@ public class BangunRuangController : BaseController
                     modelResponse.ServiceResponseCode = ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_SUCCESS;
                     modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_SUCCESS;
                     string modelUserSerialize = JsonSerializer.Serialize<UserModel>(modelUser, serializerOptions);
-                    modelResponse.Data = base64Encode(modelUserSerialize);
+                    modelResponse.Data = modelUserSerialize;
 
                 }
                 else
@@ -69,11 +89,11 @@ public class BangunRuangController : BaseController
                 modelResponse.MessageContent = StringConstant.STRING_MESSAGE_CONTENT_JSONSERIALIZE_FAIL;
                 modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_FAIL;
             }
-
         }
+    }
 
-
-        return modelResponse;
+        string stringResponseModel = base64Encode(JsonSerializer.Serialize<ResponseModel>(modelResponse));
+        return stringResponseModel;
     }
 
 
