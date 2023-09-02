@@ -5,11 +5,16 @@ using System.Text.Json;
 using backend_101.Constants;
 using backend_101.Function;
 using backend_101.Controllers;
+using backend_101.DatabaseConnection;
 
 [ApiController]
 
 public class BangunRuangController : BaseController
 {
+    public BangunRuangController(DatabaseContex databaseContex) : base(databaseContex) 
+    {
+
+    }
     [HttpPost]
     [Route("[controller]/calculatePersegi")]
 

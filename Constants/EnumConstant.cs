@@ -80,5 +80,13 @@ namespace backend_101.Constants
         NetworkReadTimeoutError = 598,
         NetworkConnectTimeoutError = 599,
         }
+
+        public enum ENUM_PAYMENT_STATUS
+        {
+            Draft = 0,
+            WaitingForPayment = 1,
+            Paid = 1,
+            Canceled = 1,
+        }
     }
 }

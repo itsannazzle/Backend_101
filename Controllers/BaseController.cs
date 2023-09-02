@@ -1,16 +1,25 @@
 using System.Text;
 using System.Text.Json;
+using backend_101.DatabaseConnection;
 using backend_101.Models;
+using backend_101.Queries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend_101.Controllers
 {
     public class BaseController : ControllerBase
     {
-        public BaseController()
+        public HitHistoryQuery _hitHistoryQuery;
+        public ResultHistoryQuery _resultHistoryQuery;
+        public RequestHistoryQuery _requestHistoryQuery;
+        public ResponseHistoryQuery _responseHistoryQuery;
+
+        public BaseController(DatabaseContex databaseContex)
         {
-
-
+            _hitHistoryQuery = new HitHistoryQuery(databaseContex);
+            _resultHistoryQuery = new ResultHistoryQuery(databaseContex);
+            _requestHistoryQuery = new RequestHistoryQuery(databaseContex);
+            _responseHistoryQuery = new ResponseHistoryQuery(databaseContex);
         }
 
          public static ResponseModel callInternalService(string stringURL, RequestModel modelRequest, string stringUserToken)

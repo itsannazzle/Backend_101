@@ -7,16 +7,21 @@ namespace backend_101.Function
 {
     public static class UtilityFunction
     {
+        
         public static ResponseModel callInternalService(string stringURL, String stringRequest)
         {
+            JsonSerializerOptions serializerOptions = new()
+            {
+                PropertyNameCaseInsensitive = true,
+            };
             ResponseModel modelResponse = new ResponseModel();
             string stringEncodedRequest;
-            HttpClient client = new HttpClient();
-            Uri uri = new Uri(stringURL);
+            HttpClient client = new();
+            Uri uri = new(stringURL);
 
             try
             {
-                using StringContent content = new StringContent(JsonSerializer.Serialize(stringRequest),UnicodeEncoding.UTF8,"application/json");
+                using StringContent content = new(JsonSerializer.Serialize(stringRequest),UnicodeEncoding.UTF8,"application/json");
 
                 HttpResponseMessage httpResponseMessage = client.PostAsync(uri, content).Result;
 
@@ -26,14 +31,14 @@ namespace backend_101.Function
 
                 string stringResult = httpResponseMessage.Content.ReadAsStringAsync().Result;
 
-                JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+                if(!string.IsNullOrEmpty(stringResult))
                 {
-                    PropertyNameCaseInsensitive = true,
-                };
-
-                modelResponse = JsonSerializer.Deserialize<ResponseModel>(stringResult,serializerOptions);
-
-
+                    modelResponse = JsonSerializer.Deserialize<ResponseModel>(stringResult,serializerOptions);
+                }
+                else
+                {
+                    modelResponse.ServiceResponseCode = ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_FAIL;
+                }
             }
             catch (Exception exception)
             {

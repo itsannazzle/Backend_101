@@ -2,12 +2,18 @@ using Microsoft.AspNetCore.Mvc;
 using backend_101.Models;
 using System.Text;
 using System.Text.Json;
+using backend_101.DatabaseConnection;
+using backend_101.Controllers;
 
 // namespace backend_101.Controllers;
 
 [ApiController]
-public class CustomerController : ControllerBase
+public class CustomerController : BaseController
 {
+    public CustomerController(DatabaseContex databaseContex) : base(databaseContex)
+    {
+
+    }
 
     [HttpGet]
     [Route("[controller]/GetCustomerDetail")]
