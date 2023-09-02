@@ -51,75 +51,81 @@ public class TransactionController : BaseController
             boolException = true;
         }
 
-        modelHitHistory.setHitHistoryFromRequest(modelRequest,_hostUrl+"/selectUserLogin");
+        modelHitHistory.setHitHistoryFromRequest(modelRequest,_hostUrl+"/insertTransaction");
         _hitHistoryQuery.insertHistory(modelHitHistory);
 
         if(!boolException)
         {
             if(!string.IsNullOrEmpty(stringToken))
             {
-                RequestModel modelRequestToUser = new();
-                ResponseModel modelResponseFromUser = new();
-                UserModel modelUserRequest = new UserModel
+                if(stringToken == modelTransactionRequest.CreatedBy)
                 {
-                    Token = stringToken
-                };
-                UserModel modelUserResponse = new UserModel();
-
-                string stringModelUser = JsonSerializer.Serialize<UserModel>(modelUserRequest);
-                string stringModelUserEncoded = base64Encode(stringModelUser);
-
-                modelRequestToUser.Data = stringModelUserEncoded;
-
-                string stringModelRequest = JsonSerializer.Serialize<RequestModel>(modelRequestToUser);
-
-                modelResponseFromUser = UtilityFunction.callInternalService(WebAddressConstant.STRING_SCHME_HTTP + WebAddressConstant.STRING_SCHME_LOCALHOST + WebAddressConstant.STRING_PORT_KIDZ + WebAddressConstant.STRING_KIDZ_VALIDATEUSERTOKEN,stringModelRequest);
-
-                if(modelResponseFromUser != null)
-                {
-                    if(modelResponseFromUser.ServiceResponseCode == ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_SUCCESS && !string.IsNullOrEmpty(modelResponseFromUser.Data))
+                    RequestModel modelRequestToUser = new();
+                    ResponseModel modelResponseFromUser = new();
+                    UserModel modelUserRequest = new UserModel
                     {
-                        modelUserResponse = JsonSerializer.Deserialize<UserModel>(modelResponseFromUser.Data, serializerOptions);
+                        Token = stringToken
+                    };
+                    UserModel modelUserResponse = new UserModel();
 
-                    }
-                    else
-                    {
-                        boolValidation = false;
-                        //failed to get user
-                    }
-                }
-                else
-                {
-                    boolValidation = false;
-                    //response empty from user server
-                }
+                    string stringModelUser = JsonSerializer.Serialize<UserModel>(modelUserRequest);
+                    string stringModelUserEncoded = base64Encode(stringModelUser);
 
-                if(boolValidation)
-                {
-                    if(modelUserResponse.Token == modelTransactionRequest.CreatedBy)
+                    modelRequestToUser.Data = stringModelUserEncoded;
+
+                    string stringModelRequest = JsonSerializer.Serialize<RequestModel>(modelRequestToUser);
+
+                    modelResponseFromUser = UtilityFunction.callInternalService(WebAddressConstant.STRING_SCHME_HTTP + WebAddressConstant.STRING_SCHME_LOCALHOST + WebAddressConstant.STRING_PORT_KIDZ + WebAddressConstant.STRING_KIDZ_VALIDATEUSERTOKEN,stringModelRequest);
+
+                    if(modelResponseFromUser != null)
                     {
-                        if(_transactionQuery.insertTransaction(modelTransactionRequest))
+                        if(modelResponseFromUser.ServiceResponseCode == ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_SUCCESS && !string.IsNullOrEmpty(modelResponseFromUser.Data))
                         {
-                            modelTransactionRequest.Token = base64Encode(modelTransactionRequest.ID.ToString());
-
-                            modelResponse.ServiceResponseCode = ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_SUCCESS;
-                            modelResponse.MessageContent = StringConstant.STRING_MESSAGE_CONTENT_SUCCESS;
-                            modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_SUCCESS;
+                            modelUserResponse = JsonSerializer.Deserialize<UserModel>(modelResponseFromUser.Data, serializerOptions);
 
                         }
                         else
                         {
-                            modelResponse.ServiceResponseCode = ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_FAIL;
-                            modelResponse.MessageContent = StringConstant.STRING_MESSAGE_CONTENT_INSERTFAIL;
-                            modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_FAIL;
+                            boolValidation = false;
+                            //failed to get user
                         }
                     }
                     else
                     {
-                        //user invalid
+                        boolValidation = false;
+                        //response empty from user server
+                    }
+
+                    if(boolValidation)
+                    {
+                        if(modelUserResponse.Token == modelTransactionRequest.CreatedBy)
+                        {
+                            if(_transactionQuery.insertTransaction(modelTransactionRequest))
+                            {
+                                modelTransactionRequest.Token = base64Encode(modelTransactionRequest.ID.ToString());
+
+                                modelResponse.ServiceResponseCode = ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_SUCCESS;
+                                modelResponse.MessageContent = StringConstant.STRING_MESSAGE_CONTENT_SUCCESS;
+                                modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_SUCCESS;
+
+                            }
+                            else
+                            {
+                                modelResponse.ServiceResponseCode = ServiceResponseCodeConstant.STRING_RESPONSECODE_MODULE_FAIL;
+                                modelResponse.MessageContent = StringConstant.STRING_MESSAGE_CONTENT_INSERTFAIL;
+                                modelResponse.MessageTitle = StringConstant.STRING_MESSAGE_TITLE_FAIL;
+                            }
+                        }
+                        else
+                        {
+                            //user invalid
+                        }
                     }
                 }
-
+                else
+                {
+                    // user invalid
+                }
             }
             else
             {
